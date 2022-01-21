@@ -21,10 +21,18 @@ char changeOrientation(char orientation, int change);
 
 int main( void )
 {
-    // intilize board with a 1 at (0,0), the initial position, and zeros elsewhere
-    unsigned int floor[BOARD_SIZE][BOARD_SIZE] = {{1}};
+    // intilize board with zeros everywhere
+    unsigned int floor[BOARD_SIZE][BOARD_SIZE] = {{0}};
 
-    unsigned int commands[] = {2, 520, 3, 510, 3, 510, 3, 510, 1, 6, 9};
+    // commands:
+    //  1: pen up
+    //  2: pen down
+    //  3: turn right
+    //  4: turn left
+    //  5xx: move forward xx steps
+    //  6: print board
+    //  9: end of data (sentinel)
+    unsigned int commands[] = {1, 535, 3, 515, 2, 510, 3, 520, 3, 510, 3, 520, 1, 6, 9}; // these commands draw a saquare in (almost) the middle of the board!
 
     size_t position[2] = {0}; // position (x,y) as a 2 dimensional array (initial position at (0,0))
     unsigned int penDown = 0; // 1 for Pen down and 0 for Pen up
@@ -60,9 +68,10 @@ int main( void )
             printBoard(floor);
         }
 
-        else if (command / 100 == 5 ) {
-            // move straightforward the amount given by movement
-            unsigned int movement = command % 100; // amount of steps
+        else if (command / 10 == 5 || command / 100 == 5) {
+            // move straightforward the amount given by movement, the amount of steps calculated with
+            // % 10 if it moves a single digit, % 100 if it moves two digits
+            unsigned int movement = command / 10 == 5 ? command % 10 : command % 100;
 
             // move in different directions depending on orientation and draw if pen is down
             switch (currentOrientation) {
@@ -70,7 +79,7 @@ int main( void )
                 case 'R':
 
                     if (penDown) {
-                        for (size_t step = 0; step < movement; step++) {
+                        for (size_t step = 0; step <= movement; step++) {
                             floor[position[0]][position[1] + step] = 1;
                         }
                     }
@@ -80,7 +89,7 @@ int main( void )
                 case 'D':
 
                     if (penDown) {
-                        for (size_t step = 0; step < movement; step++) {
+                        for (size_t step = 0; step <= movement; step++) {
                             floor[position[0] + step][position[1]] = 1;
                         }
                     }
@@ -90,7 +99,7 @@ int main( void )
                 case 'L':
 
                     if (penDown) {
-                        for (size_t step = 0; step < movement; step++) {
+                        for (size_t step = 0; step <= movement; step++) {
                             floor[position[0]][position[1] - step] = 1;
                         }
                     }
@@ -99,7 +108,7 @@ int main( void )
 
                 case 'U':
                     if (penDown) {
-                        for (size_t step = 0; step < movement; step++) {
+                        for (size_t step = 0; step <= movement; step++) {
                             floor[position[0] - step][position[1]] = 1;
                         }
                     }
@@ -113,7 +122,14 @@ int main( void )
             break; // automatically terminates loop
         }
 
-        command = commands[i]; // change to next command
+        // check that the agent is among the boundaries of the board
+        if ( 0 <= position[0] && position[0] <= BOARD_SIZE && 0 <= position[1] && position[1] <= BOARD_SIZE) {
+            command = commands[i]; // change to next command
+        }
+        else {
+            printf("Out of board! Program terminated.\n");
+            break; // automatically terminates loop
+        }
     }
 }
 
